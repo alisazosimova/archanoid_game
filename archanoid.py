@@ -58,17 +58,16 @@ key = Key()
 
 class Brick:
     WIDTH = 50
-    HIGHT = 20
+    HEIGHT = 20
 
     def __init__(self, top_x=0, top_y=0):
         self.yellow = 255, 255, 0
         self.blue = 150, 190, 255
-        self.top_x = top_x
-        self.top_y = top_y
+        self.rect = pygame.Rect(top_x, top_y, Brick.WIDTH, Brick.HEIGHT)
             
 
     def draw(self, screen):
-        pygame.draw.rect(screen, self.yellow, ((self.top_x, self.top_y), (Brick.WIDTH, Brick.HIGHT)))
+        pygame.draw.rect(screen, self.yellow, ((self.rect.x, self.rect.y), (self.rect.width, self.rect.height)))
     
 class BrickManager:
 
@@ -80,9 +79,9 @@ class BrickManager:
 
         for column in range(self.number_of_bricks):
             brick_top_x = column * (Brick.WIDTH + 1)
-            y = Brick.HIGHT
+            y = Brick.HEIGHT
             offset_x = Brick.WIDTH / 2
-            for row in range(5):
+            for row in range(7):
                 if row%2 == 0:
                     self.bricks.append(Brick(brick_top_x, row * (y + 1)))
                 else:
@@ -95,7 +94,7 @@ class BrickManager:
             b.draw(screen)
         
 
-bm = BrickManager()
+brickman = BrickManager()
 
 class BigBall:
 
@@ -112,7 +111,12 @@ class BigBall:
     def move(self):
         self.rect.y -= 1
 
+
+    def is_hit(self, brick):
+        return self.rect.colliderect(brick.rect)
+
 ball = BigBall()
+
 
 """
 #this is not working properly - ball moves after the line once it's fired
@@ -127,24 +131,29 @@ class BigBallManager:
 
     def set_still(self):
         line.state = Line.STATE_STILL
-"""
-  
-#import ipdb; ipdb.set_trace()
 
 bbm = BigBallManager()
 
-all_instances = [line, key, bm, ball, bbm]
+"""
+  
+#import ipdb; ipdb.set_trace()mmm
+
+all_instances = [line, key, brickman, ball]
 always_moving_instances = []
 
 while True:
     
     screen.fill(black)
     line.draw(screen)
-    bm.draw(screen)
+    brickman.draw(screen)
     ball.draw(screen)
 
     for instance in always_moving_instances:
-        instance.move()      
+        instance.move()
+    for item in brickman.bricks:
+        if ball.is_hit(item):
+            brickman.bricks.remove(item)
+
 
     pygame.time.Clock().tick(500)
     pygame.display.update()
