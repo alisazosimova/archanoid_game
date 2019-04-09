@@ -3,13 +3,11 @@ import sys
 
 pygame.init()
 
-
-
 black = (0, 0, 0)
 white = (255, 255, 255)
 screen_hight = 600
 screen_width = 600
-center_x = screen_width / 2
+center_x = int(screen_width / 2)
 
 screen = pygame.display.set_mode((screen_width, screen_hight))
 
@@ -67,7 +65,6 @@ class Brick:
         self.blue = 150, 190, 255
         self.top_x = top_x
         self.top_y = top_y
-
             
 
     def draw(self, screen):
@@ -80,37 +77,23 @@ class BrickManager:
 
         self.bricks = []
 
-        self.bricks_offset = []
 
-
-        for n in range(self.number_of_bricks):
-            brick_top_x = n * (Brick.WIDTH + 1)
-            y = Brick.HIGHT
-            row = 0
-            offset_x = Brick.WIDTH / 2
-            self.bricks.append(Brick(brick_top_x, row * y))
-            
-            row = 2
-            self.bricks.append(Brick(brick_top_x, row * (y + 1)))
-            
-            row = 4
-            self.bricks.append(Brick(brick_top_x, row * (y + 1)))
-
-        for n in range(self.number_of_bricks - 1):
-            brick_top_x = n * (Brick.WIDTH + 1)
+        for column in range(self.number_of_bricks):
+            brick_top_x = column * (Brick.WIDTH + 1)
             y = Brick.HIGHT
             offset_x = Brick.WIDTH / 2
-            row = 1
-            self.bricks.append(Brick(brick_top_x + offset_x, row * (y + 1)))
-            row = 3
-            self.bricks.append(Brick(brick_top_x + offset_x, row * (y + 1)))
+            for row in range(5):
+                if row%2 == 0:
+                    self.bricks.append(Brick(brick_top_x, row * (y + 1)))
+                else:
+                    if column < self.number_of_bricks - 1:
+                        self.bricks.append(Brick(brick_top_x + offset_x, row * (y + 1)))
 
 
     def draw(self, screen):
         for b in self.bricks:
             b.draw(screen)
-        for b_offset in self.bricks_offset:
-            bricks_offset.draw(screen)
+        
 
 bm = BrickManager()
 
@@ -119,29 +102,32 @@ class BigBall:
     def __init__(self):
         self.color = white
         self.x = center_x
-        self.offset_y = screen_hight - 15
+        self.offset_y = int(screen_hight - 15)
         self.radius = 3
+        self.rect = pygame.Rect(center_x, screen_hight - 15, 3, 3)
 
     def draw(self, screen):
-        pygame.draw.circle(screen, self.color, (self.x, self.offset_y), self.radius)
+        pygame.draw.circle(screen, self.color, (self.rect.x, self.rect.y), self.radius)
 
     def move(self):
-        self.offset_y -= 1
+        self.rect.y -= 1
 
 ball = BigBall()
 
+"""
+#this is not working properly - ball moves after the line once it's fired
 
 class BigBallManager:
 
     def move_with_line(self):
         if line.state == Line.STATE_MOVING_RIGHT:
-            ball.x += line.speed
+            ball.rect.x += line.speed
         if line.state == Line.STATE_MOVING_LEFT:
-            ball.x -= line.speed
+            ball.rect.x -= line.speed
 
     def set_still(self):
         line.state = Line.STATE_STILL
-
+"""
   
 #import ipdb; ipdb.set_trace()
 
@@ -156,10 +142,9 @@ while True:
     line.draw(screen)
     bm.draw(screen)
     ball.draw(screen)
-    bbm.move_with_line()
 
-    for b in always_moving_instances:
-        b.move()      
+    for instance in always_moving_instances:
+        instance.move()      
 
     pygame.time.Clock().tick(500)
     pygame.display.update()
@@ -167,11 +152,12 @@ while True:
     keys = pygame.key.get_pressed()
     if keys[key.left]:
         line.move_left()
+
     elif keys[key.right]:
         line.move_right()
-    elif not keys[key.left] or keys[key.right]:
-        bbm.set_still()
 
+    elif not keys[key.left] or keys[key.right]:
+        pass
       
     if keys[key.space]:
         always_moving_instances.append(ball)
