@@ -5,11 +5,11 @@ pygame.init()
 
 black = (0, 0, 0)
 white = (255, 255, 255)
-screen_hight = 600
+screen_height = 600
 screen_width = 600
 center_x = int(screen_width / 2)
 
-screen = pygame.display.set_mode((screen_width, screen_hight))
+screen = pygame.display.set_mode((screen_width, screen_height))
 
 class Line:
 
@@ -18,14 +18,14 @@ class Line:
     STATE_STILL = 'still'
 
     def __init__(self):
-        self.line_color = 190, 190, 255
+        self.color = 190, 190, 255
         self.speed = 6
         self.state = Line.STATE_STILL
-        self.rect = pygame.Rect(center_x-35, screen_hight-10, 70, 5)
+        self.rect = pygame.Rect(center_x - 35, screen_height - 10, 70, 5)
 
 
     def draw(self, screen):
-        pygame.draw.rect(screen, self.line_color, (self.rect.x, self.rect.y, self.rect.width, self.rect.height))
+        pygame.draw.rect(screen, self.color, (self.rect.x, self.rect.y, self.rect.width, self.rect.height))
 
 
     def move_left(self):
@@ -74,7 +74,7 @@ class BrickManager:
             brick_top_x = column * (Brick.WIDTH + 1)
             y = Brick.HEIGHT
             offset_x = Brick.WIDTH / 2
-            for row in range(7):
+            for row in range(2):
                 if row%2 == 0:
                     self.bricks.append(Brick(brick_top_x, row * (y + 1)))
                 else:
@@ -93,32 +93,35 @@ class Ball:
 
     def __init__(self):
         self.color = white
-        self.x = center_x
-        self.offset_y = int(screen_hight - 15)
-        self.radius = 3
-        self.rect = pygame.Rect(center_x, screen_hight - 15, 3, 3)
-        self.moving_up = True
+        self.rect = pygame.Rect(center_x, screen_height - 15, 3, 3)
+        self.is_moving_up = True
+        self.is_inside_screen = True
 
     def draw(self, screen):
-        pygame.draw.circle(screen, self.color, (self.rect.x, self.rect.y), self.radius)
+        pygame.draw.circle(screen, self.color, (self.rect.x, self.rect.y), self.rect.width)
 
     def move(self):
-        if self.moving_up == True:
+        if self.is_moving_up == True:
             self.rect.y -= 2
-        if self.moving_up == False:
+        if self.is_moving_up == False:
             self.rect.y +=2
 
 
     def change_state(self, state):
-        if self.moving_up == True:
-            self.moving_up = False
+        if self.is_moving_up == True:
+            self.is_moving_up = False
         else:
-            self.moving_up = True
+            self.is_moving_up = True
 
 
     def check_collision(self, brick):
         return self.rect.colliderect(brick.rect)
 
+    def check_borders(self):
+        if self.rect.x < 0 or self.rect.x > screen_width or self.rect.y < 0:
+            self.change_state(self.is_moving_up)
+            
+           
 ball = Ball()
 
 """
@@ -150,16 +153,23 @@ while True:
     line.draw(screen)
     brickman.draw(screen)
     ball.draw(screen)
-
+    ball.check_borders()
+    
+    print(ball.rect)
+    
     for instance in always_moving_instances:
         instance.move()
+
     for item in brickman.bricks:
         if ball.check_collision(item):
             brickman.bricks.remove(item)
-            ball.change_state(ball.moving_up)
+            ball.change_state(ball.is_moving_up)
+
+    if ball.check_collision(line):
+        ball.change_state(ball.is_moving_up)
 
 
-    pygame.time.Clock().tick(70)
+    pygame.time.Clock().tick(500)
     pygame.display.update()
 
     keys = pygame.key.get_pressed()
