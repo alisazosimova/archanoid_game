@@ -18,29 +18,22 @@ class Line:
     STATE_STILL = 'still'
 
     def __init__(self):
-        self.offset_x = 35
-        self.offset_y = 10
-        self.x1 = center_x - self.offset_x
-        self.x2 = center_x + self.offset_x
-        self.y = screen_hight - self.offset_y
-        self.width = 5
         self.line_color = 190, 190, 255
         self.speed = 6
         self.state = Line.STATE_STILL
+        self.rect = pygame.Rect(center_x-35, screen_hight-10, 70, 5)
 
 
     def draw(self, screen):
-        pygame.draw.line(screen, self.line_color, (self.x1, self.y), (self.x2, self.y), self.width)
+        pygame.draw.rect(screen, self.line_color, (self.rect.x, self.rect.y, self.rect.width, self.rect.height))
 
 
     def move_left(self):
-        self.x1 -= self.speed
-        self.x2 -= self.speed
+        self.rect.x -= self.speed
         self.state = Line.STATE_MOVING_LEFT
 
     def move_right(self):
-        self.x1 += self.speed
-        self.x2 += self.speed   
+        self.rect.x += self.speed
         self.state = Line.STATE_MOVING_RIGHT
 
 line = Line()
@@ -96,7 +89,7 @@ class BrickManager:
 
 brickman = BrickManager()
 
-class BigBall:
+class Ball:
 
     def __init__(self):
         self.color = white
@@ -104,19 +97,29 @@ class BigBall:
         self.offset_y = int(screen_hight - 15)
         self.radius = 3
         self.rect = pygame.Rect(center_x, screen_hight - 15, 3, 3)
+        self.moving_up = True
 
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, (self.rect.x, self.rect.y), self.radius)
 
     def move(self):
-        self.rect.y -= 1
+        if self.moving_up == True:
+            self.rect.y -= 2
+        if self.moving_up == False:
+            self.rect.y +=2
 
 
-    def is_hit(self, brick):
+    def change_state(self, state):
+        if self.moving_up == True:
+            self.moving_up = False
+        else:
+            self.moving_up = True
+
+
+    def check_collision(self, brick):
         return self.rect.colliderect(brick.rect)
 
-ball = BigBall()
-
+ball = Ball()
 
 """
 #this is not working properly - ball moves after the line once it's fired
@@ -151,11 +154,12 @@ while True:
     for instance in always_moving_instances:
         instance.move()
     for item in brickman.bricks:
-        if ball.is_hit(item):
+        if ball.check_collision(item):
             brickman.bricks.remove(item)
+            ball.change_state(ball.moving_up)
 
 
-    pygame.time.Clock().tick(500)
+    pygame.time.Clock().tick(70)
     pygame.display.update()
 
     keys = pygame.key.get_pressed()
